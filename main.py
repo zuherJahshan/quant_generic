@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from tqdm import tqdm
 
-from quantize import load_pretrained_vit, quantize_model, QuantizedLayerWrapper, find_quantized_layers
+from quantize import load_pretrained_vit, quantize_model, QuantizedLinear, find_quantized_layers
 
 BATCH_SIZE = 64
 NUM_WORKERS = 4
@@ -70,9 +70,9 @@ def main():
         print("Skipping quantization (baseline full precision)")
     else:
         print(f"Quantizing nn.Linear layers to {args.bits}-bit...")
-        quantize_model(model, [nn.Linear], QuantizedLayerWrapper, bits=args.bits)
-        wrapped = find_quantized_layers(model, QuantizedLayerWrapper)
-        print(f"Quantized {len(wrapped)} layers to {args.bits}-bit")
+        quantize_model(model, [(nn.Linear, QuantizedLinear, {"bits": args.bits})])
+        replaced = find_quantized_layers(model, QuantizedLinear)
+        print(f"Quantized {len(replaced)} layers to {args.bits}-bit")
     print(model)
 
     print("Loading ImageNet validation set...")

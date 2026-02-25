@@ -1,3 +1,22 @@
+Replace linear layers with QuantizedLinear; add InputQuantizedWrapper
+
+quantize.py:
+- QuantizedLinear: Standalone replacement for nn.Linear (not wrapper). Owns weight/bias
+  copied from original; per-channel weight and per-token activation fake quantization
+- quantize_model(model, replacement_list, input_quantize_list=None): New API. replacement_list
+  specifies (source_type, replacement_cls) or (source_type, replacement_cls, kwargs).
+  input_quantize_list specifies layers whose inputs get quantized via InputQuantizedWrapper
+- InputQuantizedWrapper: Wraps any module, quantizes input before passing through.
+  Per-token symmetric fake quantization; skip recursion to avoid double-wrapping
+- find_quantized_layers(): Parameter renamed to replacement_cls; works with QuantizedLinear
+
+main.py:
+- quantize_model(model, [(nn.Linear, QuantizedLinear, {"bits": args.bits})])
+- Import QuantizedLinear instead of QuantizedLayerWrapper
+
+Other:
+- description.md: Code description for quantize.py and main.py
+
 Switch from torchvision to timm for ViT models
 
 torchvision MultiheadAttention uses NonDynamicallyQuantizableLinear (not nn.Linear),
