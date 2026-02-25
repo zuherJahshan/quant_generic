@@ -43,8 +43,8 @@ def main():
     parser.add_argument(
         "--bits",
         type=int,
-        default=4,
-        help="Number of bits for quantization (default: 4)",
+        default=8,
+        help="Number of bits for quantization (default: 8)",
     )
     parser.add_argument(
         "--no-quantize",
@@ -65,6 +65,7 @@ def main():
     else:
         print(f"Quantizing nn.Linear layers to {args.bits}-bit...")
         quantize_model(model, [nn.Linear], QuantizedLayerWrapper, bits=args.bits)
+        print(model)
         wrapped = find_quantized_layers(model, QuantizedLayerWrapper)
         print(f"Quantized {len(wrapped)} layers to {args.bits}-bit")
 

@@ -1,3 +1,11 @@
+Add activation quantization with online per-token scales
+
+QuantizedLayerWrapper now quantizes both weights and activations:
+- Activation scale computed online at runtime from current input (no calibration)
+- Per-token scale: one scale per (batch, token) position over feature dimension
+- Handles 2D (B, D) and 3D (B, N, D) inputs via reshape
+- Symmetric fake quantization for activations, same scheme as weights
+
 Add transformer quantization with ViT-B/16 and ImageNet evaluation
 
 Quantization module (quantize.py):

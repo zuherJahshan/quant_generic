@@ -18,7 +18,8 @@ def load_pretrained_vit(weights=ViT_B_16_Weights.IMAGENET1K_V1):
 class QuantizedLayerWrapper(nn.Module):
     """
     Default quantization wrapper for nn.Linear layers.
-    Performs per-output-channel symmetric fake quantization of the weight.
+    Performs per-output-channel symmetric fake quantization of the weight,
+    and per-token symmetric fake quantization of activations with online scale.
     """
 
     def __init__(self, module: nn.Module, bits: int = 8, **kwargs):
@@ -49,8 +50,20 @@ class QuantizedLayerWrapper(nn.Module):
         return (scale * q).to(w.dtype)
 
     def forward(self, x):
+        # 1. Online per-token activation scale
+        x_flat = x.reshape(-1, x.shape[-1])  # (B*N, D) or (B, D)
+        x_max = x_flat.abs().amax(dim=-1, keepdim=True).clamp(min=1e-8)
+        scale_act = x_max / self.maxq.to(x.device)
+        scale_act = scale_act.reshape(*x.shape[:-1], 1)  # (B, N, 1) or (B, 1)
+
+        # 2. Fake-quantize activation
+        maxq = self.maxq.to(x.device)
+        q_act = torch.clamp(torch.round(x / scale_act), -(maxq + 1), maxq)
+        x_q = (scale_act * q_act).to(x.dtype)
+
+        # 3. Fake-quantize weight and compute output
         w_q = self._fake_quant_weight()
-        return F.linear(x, w_q, self.module.bias)
+        return F.linear(x_q, w_q, self.module.bias)
 
 
 def quantize_model(model, layer_types, wrapper_cls, name: str = "", **wrapper_kwargs):
