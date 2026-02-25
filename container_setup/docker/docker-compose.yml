@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  pytorch-dev:
+    build:
+      context: .
+      dockerfile: dockerfile
+    ports:
+      - "4308:22"  # SSH port
+    volumes:
+      - ../../:/workspace  # Mount the current directory to /workspace in the container
+      - /data:/data  # Mount the shared_data directory to /shared_data in the container
+    environment:
+      - TZ=Asia/Jerusalem
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    runtime: nvidia
+    container_name: manar
+    image: manar_image
+    shm_size: '128g'  # Set shared memory size

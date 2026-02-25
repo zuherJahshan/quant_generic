@@ -1,0 +1,53 @@
+# Use the official PyTorch image with CUDA 12.1 as a base image
+FROM pytorch/pytorch:2.8.0-cuda12.6-cudnn9-devel
+
+# Set environment variables
+ENV TZ=Asia/Jerusalem \
+    DEBIAN_FRONTEND=noninteractive
+
+# Install necessary packages
+RUN apt-get update && apt-get install -y \
+    tzdata \
+    sudo \
+    wget \
+    curl \
+    git \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
+    python3.8-dev \
+    apt-transport-https \
+    ca-certificates \
+    software-properties-common \
+    vim \
+    net-tools \
+    openssh-server \
+    htop \
+    ninja-build \
+    cmake \
+    universal-ctags \
+    cscope \
+    apt-file \
+    libx11-dev \
+    libxext-dev \
+    libxres-dev \
+    xclip \
+    locales \
+    fzf \
+    ruby-dev
+    # && rm -rf /var/lib/apt/lists/*
+
+# Set the working directory in the container
+WORKDIR /workspace
+
+# Install Python dependencies
+COPY requirements.txt /workspace
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+
+# Expose the SSH port
+EXPOSE 22
+
+# Start the SSH service and keep the container running
+CMD ["sh", "-c", "service ssh start && tail -f /dev/null"]
+
