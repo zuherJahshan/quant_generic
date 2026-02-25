@@ -1,18 +1,19 @@
 """
 Quantization utilities for transformer models.
-Downloads pre-trained ViT (ImageNet) and provides a generic recursive
+Loads pre-trained ViT from timm and provides a generic recursive
 quantization function that wraps target layers with a user-supplied wrapper.
 """
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchvision.models import vit_b_16, ViT_B_16_Weights
+
+import timm
 
 
-def load_pretrained_vit(weights=ViT_B_16_Weights.IMAGENET1K_V1):
-    """Load a pre-trained Vision Transformer (ViT-B/16) with ImageNet weights."""
-    return vit_b_16(weights=weights)
+def load_pretrained_vit(model_name: str = "vit_base_patch16_224", pretrained: bool = True):
+    """Load a pre-trained Vision Transformer from timm (ViT-B/16 by default)."""
+    return timm.create_model(model_name, pretrained=pretrained)
 
 
 class QuantizedLayerWrapper(nn.Module):
@@ -135,8 +136,8 @@ def find_quantized_layers(model, wrapper_cls, name: str = ""):
 
 
 if __name__ == "__main__":
-    print("Loading pre-trained ViT-B/16 (ImageNet-1K)...")
-    model = load_pretrained_vit()
+    print("Loading pre-trained ViT-B/16 from timm (ImageNet-1K)...")
+    model = load_pretrained_vit("vit_base_patch16_224", pretrained=True)
     model.eval()
 
     print("\n--- Model architecture (before quantization) ---")

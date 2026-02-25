@@ -1,3 +1,14 @@
+Switch from torchvision to timm for ViT models
+
+torchvision MultiheadAttention uses NonDynamicallyQuantizableLinear (not nn.Linear),
+so attention layers were not quantized. timm ViT uses nn.Linear throughout:
+- quantize.py: load_pretrained_vit() now uses timm.create_model(model_name, pretrained=True)
+- main.py: timm for model loading; timm.data for transforms (resolve_data_config, create_transform)
+- Added --model argparse option for timm model name (default: vit_base_patch16_224)
+- requirements.txt: add timm>=0.9.0
+
+Result: 49 quantized layers (vs 25) including attn.qkv, attn.proj, mlp.fc1/fc2, head.
+
 Add activation quantization with online per-token scales
 
 QuantizedLayerWrapper now quantizes both weights and activations:

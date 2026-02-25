@@ -30,7 +30,8 @@ python main.py /path/to/imagenet/val --bits 8
 | Argument | Required | Description |
 |----------|----------|-------------|
 | `imagenet_dir` | Yes | Path to the ImageNet validation folder |
-| `--bits` | No | Number of bits for quantization (default: 4) |
+| `--model` | No | timm model name (default: vit_base_patch16_224) |
+| `--bits` | No | Number of bits for quantization (default: 8) |
 | `--no-quantize` | No | Skip quantization; evaluate full-precision baseline |
 
 ## Example

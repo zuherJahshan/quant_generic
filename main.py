@@ -2,11 +2,11 @@
 
 import argparse
 
+import timm
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
-from torchvision.models import ViT_B_16_Weights
 from tqdm import tqdm
 
 from quantize import load_pretrained_vit, quantize_model, QuantizedLayerWrapper, find_quantized_layers
@@ -41,6 +41,12 @@ def main():
         help="Path to ImageNet validation directory (e.g. /path/to/imagenet/val)",
     )
     parser.add_argument(
+        "--model",
+        type=str,
+        default="vit_base_patch16_224",
+        help="timm model name (default: vit_base_patch16_224)",
+    )
+    parser.add_argument(
         "--bits",
         type=int,
         default=8,
@@ -56,8 +62,8 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    print("Loading pre-trained ViT-B/16...")
-    model = load_pretrained_vit()
+    print(f"Loading pre-trained {args.model} from timm...")
+    model = load_pretrained_vit(args.model, pretrained=True)
     model = model.to(device)
 
     if args.no_quantize:
@@ -65,12 +71,13 @@ def main():
     else:
         print(f"Quantizing nn.Linear layers to {args.bits}-bit...")
         quantize_model(model, [nn.Linear], QuantizedLayerWrapper, bits=args.bits)
-        print(model)
         wrapped = find_quantized_layers(model, QuantizedLayerWrapper)
         print(f"Quantized {len(wrapped)} layers to {args.bits}-bit")
+    print(model)
 
     print("Loading ImageNet validation set...")
-    preprocess = ViT_B_16_Weights.IMAGENET1K_V1.transforms()
+    data_config = timm.data.resolve_data_config(model.pretrained_cfg)
+    preprocess = timm.data.create_transform(**data_config)
     val_dataset = ImageFolder(args.imagenet_dir, transform=preprocess)
     val_loader = DataLoader(
         val_dataset,
