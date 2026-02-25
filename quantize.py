@@ -42,8 +42,10 @@ class QuantizedLayerWrapper(nn.Module):
     def _fake_quant_weight(self):
         """Quantize and dequantize the weight (fake quantization)."""
         w = self.module.weight
-        scale = self.scale.to(w.device)
-        q = torch.clamp(torch.round(w / scale), -(self.maxq + 1), self.maxq)
+        dev = w.device
+        scale = self.scale.to(dev)
+        maxq = self.maxq.to(dev)
+        q = torch.clamp(torch.round(w / scale), -(maxq + 1), maxq)
         return (scale * q).to(w.dtype)
 
     def forward(self, x):
